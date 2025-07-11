@@ -57,8 +57,11 @@ if __name__ == '__main__':
     f_lines = f.readlines()
 
     for t in f_lines:
-        obj = ER_calc(t.split(' ')[0], t.split(' ')[1])
-        obj.calc()
+        price = float(t.split(' ')[2])
+
+        if price >= 10.0:
+            obj = ER_calc(t.split(' ')[0], t.split(' ')[1])
+            obj.calc()
         #print(t.split(' ')[0])
 
 
