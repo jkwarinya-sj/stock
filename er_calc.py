@@ -5,10 +5,11 @@ import pandas as pd
 
 
 class ER_calc:
-    def __init__(self, ticker='schd', dist=0.0783):
+    def __init__(self, ticker='schd', dist=0.0783, name='tmp'):
         #print("class loading")
-        self.ticker = ticker
+        self.ticker = str(ticker)
         self.dist = float(dist)
+        self.name = name
 
         data = yf.Ticker(ticker)
         self.df = data.history(period="11y")
@@ -46,7 +47,7 @@ class ER_calc:
                 total_avr.append(0)
 
         t_avr = sum(total_avr) / len(total_avr)
-        print(self.ticker ,round(t_avr*100,2))
+        print(self.name, self.ticker ,round(t_avr*100,2))
 
 
 if __name__ == '__main__':
@@ -60,6 +61,7 @@ if __name__ == '__main__':
         price = float(t.split(' ')[2])
 
         if price >= 10.0:
+            #obj = ER_calc(t.split(' ')[0], t.split(' ')[1], t.split(' ')[3].split('\n')[0])
             obj = ER_calc(t.split(' ')[0], t.split(' ')[1])
             obj.calc()
         #print(t.split(' ')[0])
