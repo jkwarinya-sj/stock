@@ -12,13 +12,14 @@ class ER_calc:
         self.name = name
 
         data = yf.Ticker(ticker)
-        self.df = data.history(period="11y")
+        self.df = data.history(period="6y")
 
         #print(self.df)
 
 
     def calc(self):
-        period_arr=[1,2,3,4,5,6,7,8,9,10]
+        #period_arr=[1,2,3,4,5,6,7,8,9,10]
+        period_arr=[1,2,3,4,5]
         total_avr = []
         year = 252
         for p in period_arr:
@@ -54,7 +55,7 @@ if __name__ == '__main__':
     #obj = ER_calc()
     #obj.calc()
 
-    f = open("list")
+    f = open("list.a")
     f_lines = f.readlines()
 
     for t in f_lines:
