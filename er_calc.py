@@ -18,8 +18,59 @@ class ER_calc:
         #print(self.df)
 
 
+    def calc2(self):
+        #total_avr = []
+        year = 252
+        stock = 1
+        div_queue = queue.Queue()
+        avr_list = []
+
+        p = 5
+
+        idx = 0
+        for close in self.df['Close']:
+            div = self.df['Dividends'][idx]
+
+            if div != 0.0:
+                #div_arr.append(div)
+                #div_st = div/close
+                div_queue.put(div/close)
+                if idx > year and div_queue.empty() == False:
+                    div_queue.get()
+
+            if(idx < (year+1)*p):
+                idx = idx+1
+                continue
+
+
+
+            pre_close = self.df['Close'][idx-(year*p)]
+
+            div_list = list(div_queue.queue)
+            for d in div_list:
+                stock = stock + d
+
+               
+            avr_list.append((close*stock)/pre_close - 1)
+            stock = 1
+
+            idx = idx+1
+
+
+        try:
+            t_avr = sum(avr_list) / len(avr_list)
+            print(self.name, self.ticker ,round(t_avr*100,2), round(min(avr_list)*100,2), round(max(avr_list)*100,2))
+        except ZeroDivisionError:
+            t_avr = 0
+            print(self.name, self.ticker ,0, 0,0)
+
+
+
+
+
     def calc(self):
-        period_arr=[1,2,3,4,5,6,7,8,9,10]
+        period_arr=range(1,11)
+        #period_arr=[1,2,3,4,5,6,7,8,9,10]
         #period_arr=[1,2,3,4,5]
         total_avr = []
         year = 252
@@ -107,16 +158,17 @@ if __name__ == '__main__':
     #obj = ER_calc()
     #obj.calc()
 
-    f = open("list.a")
+    f = open("list.f")
     f_lines = f.readlines()
 
     for t in f_lines:
-        price = float(t.split(' ')[2])
+        #price = float(t.split(' ')[2])
 
-        if price >= 10.0:
+        #if price >= 10.0:
             #obj = ER_calc(t.split(' ')[0], t.split(' ')[1], t.split(' ')[3].split('\n')[0])
-            obj = ER_calc(t.split(' ')[0], t.split(' ')[1])
-            obj.calc()
+        obj = ER_calc(t.split('\n')[0])
+            #obj.calc()
+        obj.calc2()
         #print(t.split(' ')[0])
 
 

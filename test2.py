@@ -16,6 +16,13 @@ idx = 0
 year = 252
 stock = 1
 avr_list = []
+
+pa = range(1,10)
+
+for idx in pa:
+    print(idx)
+
+"""
 for close in df['Close']:
 
     if(idx < year+1):
@@ -36,3 +43,4 @@ for close in df['Close']:
 #print(sum(avr_list)/len(avr_list))
 
 print(df)
+"""
