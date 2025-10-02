@@ -14,7 +14,7 @@ class Data:
 
     def run(self, df):
         if self.logic == 'dca':
-            print('dca skip')
+            print(self.name, 'dca_skip')
             return
 
         status = ''
@@ -66,7 +66,7 @@ class Operating:
 
     def run(self):
         for data in self.data_list:
-            tmp_df = self.obj_dm.load_data_from_yf(data.code)
+            tmp_df = self.obj_dm.load_data_from_yf(data.code, "2023-01-01")
             data.run(tmp_df)
             
             

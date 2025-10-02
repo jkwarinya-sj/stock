@@ -21,6 +21,7 @@ class Logic:
 
         for price in dca_df:
             if idx < 51:
+                print(price)
                 idx = idx+1
                 continue
 
@@ -31,7 +32,7 @@ class Logic:
 
             idx = idx+1
 
-            #print(price, org_money, ret_money, self.get_rate(ret_money, org_money))
+            print(price, org_money, ret_money, self.get_rate(ret_money, org_money))
 
         #print(total_invest_money)
         #print(ret_money)
@@ -158,8 +159,8 @@ class Logic:
 
         for price in alpha_df:
             q.put(price)
-            #print(price)
             if idx < 51:
+                print(price)
                 idx = idx+1
                 continue
 
@@ -188,7 +189,7 @@ class Logic:
             ret_rate = self.get_rate(ret_m, invest_m)
                             
 
-            #print(price, max_price, cpm, invest_m, stock,ret_m, ret_rate, investing)
+            print(price, max_price, cpm, invest_m, stock,ret_m, ret_rate, investing)
 
             if ret_rate > end_rate:
                 investing = False
@@ -660,6 +661,85 @@ class Logic:
         ret = self.get_rate(ret_m, org_m)
         return ret
 
+
+    # 로직 zeta의 수익률
+    # zeta:
+    #  - 매수: 누적 등락률이 -% 일 경우 매수
+    #  - 매도: target_rate + 이면 매도
+    #  - 누적 등락률이 0.3 이상이면 0으로 초기화
+    def logic_zeta(self, df):
+        print('logic epsilon run')
+        zeta_df = df['Close']
+
+        idx = 0
+        investing = False
+
+        org_m = 1000000
+        invest_m = 0
+        target_rate = 0.15
+        sum_cpm=0
+ 
+
+        wait_idx = 0
+
+        ret_money = 0
+        stock = 0
+        tmp_m = 0
+
+        
+        for price in zeta_df:
+
+            if idx < 51:
+                print(price)
+                idx = idx+1
+                continue
+
+            #avr_price = (price+delta_df[idx-1])/2
+            cpm = self.get_rate(price,zeta_df[idx-1])
+            sum_cpm = sum_cpm+cpm
+
+            
+            if sum_cpm < 0 and not investing and wait_idx==0:
+                investing = True
+                if tmp_m == 0:
+                    invest_m = org_m
+                else:
+                    invest_m = tmp_m
+                stock = invest_m/price
+
+            ret_m = price*stock
+            ret_rate = self.get_rate(ret_m, invest_m)
+            
+
+            print(price, cpm, sum_cpm, invest_m, stock, ret_m, ret_rate, investing)
+
+            
+            if ret_rate > target_rate:
+                investing = False
+                stock = 0
+                tmp_m = ret_m
+                sum_cpm = 0
+                wait_idx = 2 
+
+            if sum_cpm > 0.3:
+                sum_cpm = 0
+
+            if wait_idx > 0:
+                wait_idx = wait_idx-1
+
+
+            
+            idx = idx+1
+
+
+        if ret_m == 0:
+            ret_m = tmp_m
+
+        ret = self.get_rate(ret_m, org_m)
+        return ret
+
+
+
         
 
     # 로직 beta에 대한 수익률
@@ -962,18 +1042,29 @@ def back_test_one(name):
     #code = '196170.KQ'
     df = obj_dm.load_data_from_yf(code)
  
-    ret = obj.logic_dca(df)
-    print('dca: ',ret)
-
+    """
     ret = obj.logic_alpha(df)
     print('alpha: ',ret)
     ret = obj.logic_gamma(df)
     print('gamma: ',ret)
     ret = obj.logic_delta(df)
     print('delta: ',ret)
-    ret = obj.logic_epsilon(df)
-    print('epsilon: ',ret)
     #print(ret)
+    """
+    #ret = obj.logic_epsilon(df)
+    #print('epsilon: ',ret)
+
+    #ret = obj.logic_zeta(df)
+    #print('zeta: ',ret)
+
+    ret = obj.logic_dca(df)
+    print('dca: ',ret)
+
+
+    #ret = obj.logic_alpha(df)
+    #print('alpha: ',ret)
+
+
 
     #ret = obj.logic_alpha_v3(df)
     #ret = obj.logic_dca(df)
@@ -988,12 +1079,12 @@ def back_test_one(name):
 if __name__ == '__main__':
     obj = Logic()
 
-    obj.choose_logic('back_test.csv')
+    #obj.choose_logic('back_test.csv')
     
     #obj_dm = DataManagement()
     
     #df = obj_dm.load_data_market_cap('market_cap_kosdaq.csv')
-    #back_test_one('삼성전자')
+    back_test_one('RFHIC')
 
     #back_test_dca('back_test.csv')
     #back_test_alpha('back_test.csv')

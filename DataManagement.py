@@ -17,9 +17,9 @@ class DataManagement:
         return self.df
 
     # 주식코드를 받아서 dataframe 반환
-    def load_data_from_yf(self, code):
+    def load_data_from_yf(self, code, start="2018-01-01"):
         data = yf.Ticker(code)
-        self.df = data.history(interval="1wk", start="2023-01-01")
+        self.df = data.history(interval="1wk", start=start)
         #print(self.df)
 
         return self.df
