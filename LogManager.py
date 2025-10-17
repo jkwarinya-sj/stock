@@ -1,6 +1,6 @@
 import logging
 
-level = logging.INFO
+level = logging.ERROR
 
 class LogManager:
     _initialized = False

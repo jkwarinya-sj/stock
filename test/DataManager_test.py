@@ -1,5 +1,9 @@
 import sys
-sys.path.append('/home/jkpark/tmp/stock')
+import os
+
+curr_path = os.getcwd()
+root_path = os.path.dirname(curr_path)
+sys.path.append(root_path)
 
 from DataManager import DataManager as d
 import pandas as pd
@@ -51,7 +55,8 @@ def test_add_code():
 def test_load_stock_data(code, expected):
     df = d.load_stock_data(code, end='2024-12-31')
 
-    assert df['Close'][-1] == expected
+    #assert df['Close'][-1] == expected
+    assert df['Close'].iloc[-1] == expected
 
 """
 

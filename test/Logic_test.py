@@ -45,15 +45,19 @@ def test_check_buy(code, alpha, gamma, delta, epsilon):
 def test_check_sell(code, alpha, gamma, delta, epsilon):
     df = d.load_stock_data(code, end='2024-12-31')
 
-    ret = l.Logic_alpha._check_sell(df, df['Close'][-10], 1)
+    #ret = l.Logic_alpha._check_sell(df, df['Close'][-10], 1)
+    ret = l.Logic_alpha._check_sell(df, df['Close'].iloc[-10], 1)
     assert ret == alpha
 
-    ret = l.Logic_gamma._check_sell(df, df['Close'][-10], 1)
+    #ret = l.Logic_gamma._check_sell(df, df['Close'][-10], 1)
+    ret = l.Logic_gamma._check_sell(df, df['Close'].iloc[-10], 1)
     assert ret == gamma
 
-    ret = l.Logic_delta._check_sell(df, df['Close'][-100], 1)
+    #ret = l.Logic_delta._check_sell(df, df['Close'][-100], 1)
+    ret = l.Logic_delta._check_sell(df, df['Close'].iloc[-100], 1)
     assert ret == delta
 
-    ret = l.Logic_epsilon._check_sell(df, df['Close'][-100], 1)
+    #ret = l.Logic_epsilon._check_sell(df, df['Close'][-100], 1)
+    ret = l.Logic_epsilon._check_sell(df, df['Close'].iloc[-100], 1)
     assert ret == epsilon
 

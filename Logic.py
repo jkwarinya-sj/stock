@@ -193,7 +193,8 @@ class Logic_alpha(Logic):
         sell = False
         target_rate = 0.15
 
-        price = alpha_df[-1]
+        #price = alpha_df[-1]
+        price = alpha_df.iloc[-1]
 
         ret_m = price*stock
         ret_rate = cls.get_rate(ret_m, org_m)
@@ -329,7 +330,8 @@ class Logic_gamma(Logic):
         
         sell = False
         
-        l_price = gamma_df[-1]
+        #l_price = gamma_df[-1]
+        l_price = gamma_df.iloc[-1]
 
         for price in gamma_df:
             q.put(price)
@@ -389,7 +391,8 @@ class Logic_delta(Logic):
                 idx = idx+1
                 continue
 
-            avr_price = (price+delta_df[idx-1])/2
+            #avr_price = (price+delta_df[idx-1])/2
+            avr_price = (price+delta_df.iloc[idx-1])/2
             cpm = cls.get_rate(price, avr_price)
 
             if cpm < 0 and not investing:
@@ -430,7 +433,8 @@ class Logic_delta(Logic):
                 log.debug(price)
                 continue
 
-            avr_price = (price+delta_df[idx-1])/2
+            #avr_price = (price+delta_df[idx-1])/2
+            avr_price = (price+delta_df.iloc[idx-1])/2
             cpm = cls.get_rate(price, avr_price)
 
 
@@ -464,7 +468,8 @@ class Logic_delta(Logic):
         stock = stock
         org_m = org_m * stock
  
-        price = delta_df[-1]
+        #price = delta_df[-1]
+        price = delta_df.iloc[-1]
 
         ret_m = price*stock
 
@@ -517,7 +522,8 @@ class Logic_epsilon(Logic):
                 idx = idx+1
                 continue
 
-            cpm = cls.get_rate(price,epsilon_df[idx-1])
+            #cpm = cls.get_rate(price,epsilon_df[idx-1])
+            cpm = cls.get_rate(price,epsilon_df.iloc[idx-1])
             sum_cpm = sum_cpm+cpm
             
             if sum_cpm < 0 and not investing:
@@ -566,7 +572,8 @@ class Logic_epsilon(Logic):
                 log.debug(price)
                 continue
 
-            cpm = cls.get_rate(price,epsilon_df[idx-1])
+            #cpm = cls.get_rate(price,epsilon_df[idx-1])
+            cpm = cls.get_rate(price,epsilon_df.iloc[idx-1])
             sum_cpm = sum_cpm+cpm
             
             if sum_cpm < 0:
@@ -601,7 +608,8 @@ class Logic_epsilon(Logic):
         stock = stock
         target_rate = 0.15
         
-        price = epsilon_df[-1]
+        #price = epsilon_df[-1]
+        price = epsilon_df.iloc[-1]
 
         ret_m = price*stock
         ret_rate = cls.get_rate(ret_m, org_m)

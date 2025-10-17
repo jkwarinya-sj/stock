@@ -167,10 +167,10 @@ class Simulator:
 if __name__ == '__main__':
     obj = Simulator('final_data_1013.csv')
     #obj.run()
-    obj.check_current_profit()
+    #obj.check_current_profit()
     #obj.update_logic()
     #obj.make_portfolio()
-    #obj.decide_invest()
+    obj.decide_invest()
 
 
 
