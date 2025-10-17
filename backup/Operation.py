@@ -32,7 +32,7 @@ class Operating:
     def __init__(self):
         print("Start Operating")
         self.obj_dm = DataManagement()
-        self.df = self.obj_dm.load_data_from_csv('final_data.csv')
+        self.df = self.obj_dm.load_data_from_csv('final_data_1013.csv')
         logic_m = Logic()
         self.method_dict_buy={}
         self.method_dict_buy['alpha'] = logic_m.logic_alpha_check_buy
@@ -67,8 +67,16 @@ class Operating:
     def run(self):
         for data in self.data_list:
             tmp_df = self.obj_dm.load_data_from_yf(data.code, "2023-01-01")
+            #print(tmp_df)
             data.run(tmp_df)
             
+    def earnings(self):
+        for data in self.data_list:
+            tmp_df = self.obj_dm.load_data_from_yf(data.code, "2023-01-01")
+
+            print(tmp_df['Close'][-1])
+
+
             
 
 
@@ -78,5 +86,6 @@ class Operating:
 if __name__ == '__main__':
     obj = Operating()
     obj.run()
+    #obj.earnings()
 
 

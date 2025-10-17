@@ -21,7 +21,7 @@ class Logic:
 
         for price in dca_df:
             if idx < 51:
-                print(price)
+                #print(price)
                 idx = idx+1
                 continue
 
@@ -32,7 +32,7 @@ class Logic:
 
             idx = idx+1
 
-            print(price, org_money, ret_money, self.get_rate(ret_money, org_money))
+            #print(price, org_money, ret_money, self.get_rate(ret_money, org_money))
 
         #print(total_invest_money)
         #print(ret_money)
@@ -101,34 +101,24 @@ class Logic:
         idx = 0
 
         stock = stock
-        org_m = org_m
+        org_m = org_m * stock
         sell = False
-
         end_rate = 0.15
-        for price in alpha_df:
-            q.put(price)
-            #print(price)
-            if idx < 51:
-                idx = idx+1
-                continue
 
-            ret_m = price*stock
-            ret_rate = self.get_rate(ret_m, org_m)
+        price = alpha_df[-1]
 
-            if ret_rate > end_rate:
-                sell = True
-            else:
-                sell = False
+        ret_m = price*stock
+        ret_rate = self.get_rate(ret_m, org_m)
 
-            #print(price, stock, ret_m, org_m, ret_rate, sell)
-            
-            q.get()
-            idx = idx+1
+        if ret_rate > end_rate:
+            sell = True
+        else:
+            sell = False
 
         if sell:
-            return 'sell'
+            return 'sell', ret_rate
         else:
-            return '-'
+            return '-', ret_rate
 
 
 
@@ -138,7 +128,7 @@ class Logic:
     # - 매수 : 52주 고점 대비 -start_rate 충족 시 매수
     # - 매도 : 매수가 대비 +end_rate 충족 시 매도
     def logic_alpha(self,df):
-        #print('logic alpha run')
+        print('logic alpha run')
         alpha_df = df['Close']
         idx = 0
         q = queue.Queue()
@@ -160,7 +150,7 @@ class Logic:
         for price in alpha_df:
             q.put(price)
             if idx < 51:
-                print(price)
+                #print(price)
                 idx = idx+1
                 continue
 
@@ -189,7 +179,7 @@ class Logic:
             ret_rate = self.get_rate(ret_m, invest_m)
                             
 
-            print(price, max_price, cpm, invest_m, stock,ret_m, ret_rate, investing)
+            #print(price, max_price, cpm, invest_m, stock,ret_m, ret_rate, investing)
 
             if ret_rate > end_rate:
                 investing = False
@@ -265,6 +255,8 @@ class Logic:
         
         sell = False
         
+        l_price = gamma_df[-1]
+
         for price in gamma_df:
             q.put(price)
             if idx < 51:
@@ -272,22 +264,29 @@ class Logic:
                 continue
                 
             max_price = max(list(q.queue))
-            cpm = self.get_rate(price, max_price)
-        
-            if cpm >= 0:
-                sell = True
-            else:
-                sell = False
-            
+            #cpm = self.get_rate(price, max_price)
             #print(price, sell, cpm)
 
             q.get()
             idx = idx+1
 
-        if sell:
-            return 'sell'
+        org_m = org_m * stock
+        d_price = l_price*stock
+
+        ret_rate = self.get_rate(d_price, org_m)
+        #print(l_price, max_price,ret_rate)
+        cpm = self.get_rate(l_price, max_price)
+
+        if cpm >= 0:
+            sell = True
         else:
-            return '-'
+            sell = False
+
+
+        if sell:
+            return 'sell', ret_rate
+        else:
+            return '-', ret_rate
 
 
     # 로직 gamma의 수익률
@@ -408,8 +407,21 @@ class Logic:
 
         target_rate = 0.15
         stock = stock
-        org_m = org_m
+        org_m = org_m * stock
  
+        price = delta_df[-1]
+
+        ret_m = price*stock
+
+        #print(ret_m, org_m)
+        ret_rate = self.get_rate(ret_m, org_m)
+
+        if ret_rate > target_rate:
+            sell = True
+        else:
+            sell = False
+
+        """
         for price in delta_df:
             if idx < 51:
                 idx = idx+1
@@ -427,16 +439,18 @@ class Logic:
             else:
                 sell = False
 
-            #print(price, org_m, ret_m, stock, ret_rate, sell)
+            print(price, org_m, ret_m, stock, ret_rate, sell)
 
             #print(price, sell)
 
             idx = idx+1
+        """
+        #print(ret_rate)
 
         if sell:
-            return 'sell'
+            return 'sell', ret_rate
         else:
-            return '-'
+            return '-', ret_rate
 
 
 
@@ -554,10 +568,11 @@ class Logic:
         idx = 0
         sell = False
 
-        org_m = org_m
+        org_m = org_m * stock
         stock = stock
         target_rate = 0.15
         
+        """
         for price in epsilon_df:
 
             if idx < 51:
@@ -577,10 +592,24 @@ class Logic:
             
             idx = idx+1
 
-        if sell:
-            return 'sell'
+        #print(ret_rate)
+        """
+
+        price = epsilon_df[-1]
+
+        ret_m = price*stock
+        ret_rate = self.get_rate(ret_m, org_m)
+
+        if ret_rate > target_rate:
+            sell = True
         else:
-            return '-'
+            sell = False
+
+
+        if sell:
+            return 'sell', ret_rate
+        else:
+            return '-', ret_rate
 
 
 
@@ -668,7 +697,7 @@ class Logic:
     #  - 매도: target_rate + 이면 매도
     #  - 누적 등락률이 0.3 이상이면 0으로 초기화
     def logic_zeta(self, df):
-        print('logic epsilon run')
+        print('logic zeta run')
         zeta_df = df['Close']
 
         idx = 0
@@ -690,7 +719,7 @@ class Logic:
         for price in zeta_df:
 
             if idx < 51:
-                print(price)
+                #print(price)
                 idx = idx+1
                 continue
 
@@ -711,7 +740,7 @@ class Logic:
             ret_rate = self.get_rate(ret_m, invest_m)
             
 
-            print(price, cpm, sum_cpm, invest_m, stock, ret_m, ret_rate, investing)
+            #print(price, cpm, sum_cpm, invest_m, stock, ret_m, ret_rate, investing)
 
             
             if ret_rate > target_rate:
@@ -888,32 +917,42 @@ class Logic:
 
     def choose_logic(self, file_name):
         obj_dm = DataManagement()
-        df = obj_dm.load_data_market_cap(file_name)
+        #df = obj_dm.load_data_market_cap(file_name)
+        df = obj_dm.load_data_investing(file_name)
         
-        logic_name_list = ['dca','alpha','gamma','delta','epsilon']
+        logic_name_list = ['dca','alpha','gamma','delta','epsilon','zeta']
         logic_list = []
-        set_zero = []
+        set_price = []
+        set_stock = []
 
 
-        for name, code in zip(df['종목명'],df['Code']):
+        for name, code, stock, price, logic in zip(df['종목명'],df['Code'],df['stock'],df['price'],df['logic']):
             tmp_df = obj_dm.load_data_from_yf(code)
-            
-            ret_list = [obj.logic_dca(tmp_df), obj.logic_alpha(tmp_df),obj.logic_gamma(tmp_df), obj.logic_delta(tmp_df), obj.logic_epsilon(tmp_df)]
 
-            ret_list.index(max(ret_list))
+            if stock == 0:
+                ret_list = [obj.logic_dca(tmp_df), obj.logic_alpha(tmp_df),obj.logic_gamma(tmp_df), obj.logic_delta(tmp_df), obj.logic_epsilon(tmp_df), obj.logic_zeta(tmp_df)]
+                ret_list.index(max(ret_list))
 
-            #print(ret_list)
-            #print(name, logic_name_list[ret_list.index(max(ret_list))])
-            logic_list.append(logic_name_list[ret_list.index(max(ret_list))])
-            set_zero.append(0)
+                #print(ret_list)
+                #print(name, logic_name_list[ret_list.index(max(ret_list))])
+                logic_list.append(logic_name_list[ret_list.index(max(ret_list))])
+            else:
+                logic_list.append(logic)
+                
+            if stock == 0:
+                set_stock.append(0)
+                set_price.append(0)
+            else:
+                set_stock.append(stock)
+                set_price.append(price)
 
 
         df['logic'] = logic_list
-        df['price'] = set_zero
-        df['stock'] = set_zero
+        df['price'] = set_price
+        df['stock'] = set_stock
 
         #print(df)
-        df.to_csv('./datas/final_data.csv',sep=',',encoding="utf-8-sig")
+        df.to_csv('./datas/final_data_1013_1.csv',sep=',',encoding="utf-8-sig")
 
 
 
@@ -1080,11 +1119,12 @@ if __name__ == '__main__':
     obj = Logic()
 
     #obj.choose_logic('back_test.csv')
+    obj.choose_logic('final_data_1012.csv')
     
     #obj_dm = DataManagement()
     
     #df = obj_dm.load_data_market_cap('market_cap_kosdaq.csv')
-    back_test_one('RFHIC')
+    #back_test_one('RFHIC')
 
     #back_test_dca('back_test.csv')
     #back_test_alpha('back_test.csv')

@@ -19,7 +19,13 @@ class DataManagement:
     # 주식코드를 받아서 dataframe 반환
     def load_data_from_yf(self, code, start="2018-01-01"):
         data = yf.Ticker(code)
-        self.df = data.history(interval="1wk", start=start)
+        #self.df = data.history(interval="1wk", start=start)
+        self.df = data.history(start=start)
+        self.df["weekday"] = self.df.index.weekday
+
+        self.df = self.df[self.df["weekday"] == 4]
+
+
         #print(self.df)
 
         return self.df
@@ -46,7 +52,7 @@ class DataManagement:
     # .csv 파일을 읽어서 dataframe 반환
     def load_data_from_csv(self, file_name):
         file_name = os.path.join("./datas", file_name)
-        self.df = pd.read_csv(file_name)
+        self.df = pd.read_csv(file_name, index_col=0)
         #print(self.df)
 
         return self.df
@@ -73,6 +79,21 @@ class DataManagement:
         #print(self.a_df)
 
         return self.a_df
+
+    def load_data_investing(self, file_name):
+        self.load_data_from_csv(file_name)
+
+        code_list = []
+
+        for name in self.df['종목명']:
+            code = self.name_to_code(name)
+            #print(name,code)
+            code_list.append(code)
+
+        self.df['Code'] = code_list
+
+        return self.df
+
 
 
 
