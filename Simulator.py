@@ -33,7 +33,7 @@ class Simulator:
         log.debug(df)
 
         self.stock_list = []
-        for name, code, logic, price, stock in zip(df['종목명'],df['Code'],df['logic'],df['price'],df['stock']):
+        for name, code, logic, price, stock in zip(df['Name'],df['Code'],df['Logic'],df['Price'],df['Stock']):
             stock = Stock(name, code, logic, price, stock, method_dict[logic])
             self.stock_list.append(stock)
 
@@ -69,10 +69,10 @@ class Simulator:
         #    stock.check_current_profit(df)
 
         cost = (sum([s.get_cost for s in self.stock_list]))
-        curr = (sum([DataManager.load_stock_data(s.code)['Close'][-1] * s.stock for s in self.stock_list if s.stock > 0]))
+        curr = (sum([DataManager.load_stock_data(s.code)['Close'].iloc[-1] * s.stock for s in self.stock_list if s.stock > 0]))
         print(curr/1000000-1)
 
-    def update_logic(self, end=datetime.date.today()):
+    def update_logic(self, end=datetime.date.today(), out_file='test.csv'):
         #df = DataManager.load_data_from_csv(self.in_file)
         #log.debug(df)
 
@@ -130,34 +130,31 @@ class Simulator:
         """
 
         df = pd.DataFrame([ s.to_data_frame  for s in self.stock_list])
-        DataManager.save_data_to_csv('test5.csv', df, self.base_path)
+        DataManager.save_data_to_csv(out_file, df, self.base_path)
 
         return logic_list
 
 
-    def make_portfolio(self):
+    def make_portfolio(self, out_file='test.csv'):
         df = DataManager.load_data_from_csv(self.in_file)
 
-        portfolio_df = df[df['stock'] > 0]
+        portfolio_df = df[df['Stock'] > 0]
 
         curr_price_list = []
         earn_rate_list = []
+        
+        for s in self.stock_list:
+            if s.stock > 0:
+                stock_df = DataManager.load_stock_data(s.code, '2023-01-01')
+                curr_price = stock_df['Close'].iloc[-1]
+                curr_price_list.append(curr_price)
 
-        for code, stock, price in zip(portfolio_df['Code'], portfolio_df['stock'], portfolio_df['price']):
-            stock_df = DataManager.load_stock_data(code, '2023-01-01')
-            curr_price = stock_df['Close'][-1]
-            curr_price_list.append(curr_price)
-
-            earn_rate = curr_price/price - 1
-            earn_rate_list.append(earn_rate)
-
-
-            #logic_class[logic_name_list.index(logic)].run_logic(stock_df)
-            #print(logic_idx)
+                earn_rate = curr_price/s.buy_price - 1
+                earn_rate_list.append(earn_rate)
 
         portfolio_df['curr_price'] = curr_price_list
         portfolio_df['earn_rate'] = earn_rate_list
-        DataManager.save_data_to_csv('test4.csv', portfolio_df)
+        DataManager.save_data_to_csv(out_file, portfolio_df)
 
     def test(self):
         df = pd.DataFrame([ s.to_data_frame  for s in self.stock_list])
@@ -165,12 +162,12 @@ class Simulator:
 
 
 if __name__ == '__main__':
-    obj = Simulator('final_data_1013.csv')
+    obj = Simulator('invest_1017.csv')
     #obj.run()
     #obj.check_current_profit()
-    #obj.update_logic()
-    #obj.make_portfolio()
-    obj.decide_invest()
+    #obj.update_logic(out_file='invest_1017.csv')
+    #obj.decide_invest()
+    obj.make_portfolio('251017.csv')
 
 
 
