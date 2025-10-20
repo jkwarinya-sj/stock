@@ -70,7 +70,7 @@ class Simulator:
 
         cost = (sum([s.get_cost for s in self.stock_list]))
         curr = (sum([DataManager.load_stock_data(s.code)['Close'][-1] * s.stock for s in self.stock_list if s.stock > 0]))
-        print(curr/1000000-1)
+        print(curr/1000000-1, curr-1000000)
 
     def update_logic(self, end=datetime.date.today()):
         #df = DataManager.load_data_from_csv(self.in_file)
@@ -167,10 +167,10 @@ class Simulator:
 if __name__ == '__main__':
     obj = Simulator('final_data_1013.csv')
     #obj.run()
-    #obj.check_current_profit()
+    obj.check_current_profit()
     #obj.update_logic()
     #obj.make_portfolio()
-    obj.decide_invest()
+    #obj.decide_invest()
 
 
 

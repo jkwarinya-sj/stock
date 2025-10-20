@@ -134,16 +134,6 @@ class Logic_alpha(Logic):
 
         return cls.get_rate(ret_m, org_m)
 
-    """
-    @classmethod
-    def check_status(cls, df, org_m, stock):
-        if stock == 0:
-            ret = self._check_buy(df)
-        else:
-            ret = self._check_sell(df, org_m, stock)
-
-        return ret
-    """
 
     # 로직 alpha에 매수 여부
     @classmethod
@@ -626,6 +616,142 @@ class Logic_epsilon(Logic):
         else:
             return '-'
 
+class Logic_zeta(Logic):
+
+    def __init__(self):
+        log.info("Start Logic")
+
+    # 로직 zeta의 수익률
+    # zeta:
+    #  - 매수 : 52주 고점 대비 start_rate 보다 작을 경우 매수
+    #  - 매도: target_rate + 이면 매도
+    @classmethod
+    def run_logic(cls, df):
+        log.info('logic zeta run')
+        zeta_df = df['Close']
+        idx = 0
+        q = queue.Queue()
+
+        org_m = 1000000
+        ret_m = 0
+        tmp_m = 0
+        stock = 0
+        invest_m = 0
+
+        start_rate = 0.15
+        target_rate = 0.15
+        investing = False
+
+        for price in zeta_df:
+            q.put(price)
+            if idx < 51:
+                log.debug(price)
+                idx = idx+1
+                continue
+
+            max_price = min(list(q.queue))
+            cpm = cls.get_rate(price, max_price)
+
+            if cpm < start_rate and not investing:
+                investing = True
+                if tmp_m == 0:
+                    invest_m = org_m
+                else:
+                    invest_m = tmp_m
+                stock = invest_m/price
+
+            ret_m = price*stock
+            ret_rate = cls.get_rate(ret_m, invest_m)
+
+            log.debug("%s, %s, %s, %s, %s, %s, %s, %s", price, max_price, cpm, invest_m, stock, ret_m, ret_rate, investing)
+
+            if ret_rate > target_rate:
+                investing = False
+                invest_m = 0
+                stock = 0
+                tmp_m = ret_m
+            
+            q.get()
+            idx = idx+1
+
+
+        if ret_m == 0:
+            ret_m = tmp_m
+
+        return cls.get_rate(ret_m, org_m)
+
+
+
+    # 로직 epsilon의 매수 여부
+    @classmethod
+    def _check_buy(cls, df):
+        log.info('logic epsilon check buy run')
+        epsilon_df = df['Close']
+
+        idx = 0
+        sum_cpm=0
+        buy = False
+        
+        for price in epsilon_df:
+            if idx < 51:
+                idx = idx+1
+                log.debug(price)
+                continue
+
+            #cpm = cls.get_rate(price,epsilon_df[idx-1])
+            cpm = cls.get_rate(price,epsilon_df.iloc[idx-1])
+            sum_cpm = sum_cpm+cpm
+            
+            if sum_cpm < 0:
+                buy = True
+            else:
+                buy = False
+
+            if sum_cpm > 0.3:
+                sum_cpm = 0
+
+            log.debug("%s, %s, %s, %s",price, cpm, sum_cpm, buy)
+            
+            idx = idx+1
+
+        if buy:
+            return 'buy'
+        else:
+            return '-'
+
+
+
+    # 로직 epsilon의 매도 여부
+    @classmethod
+    def _check_sell(cls, df, org_m, stock):
+        log.info('logic epsilon check sell run')
+        epsilon_df = df['Close']
+        
+        idx = 0
+        sell = False
+
+        org_m = org_m * stock
+        stock = stock
+        target_rate = 0.15
+        
+        #price = epsilon_df[-1]
+        price = epsilon_df.iloc[-1]
+
+        ret_m = price*stock
+        ret_rate = cls.get_rate(ret_m, org_m)
+
+        if ret_rate > target_rate:
+            sell = True
+        else:
+            sell = False
+
+        log.info("%s, %s, %s, %s", org_m, price, ret_rate, sell)
+
+        if sell:
+            return 'sell'
+        else:
+            return '-'
+
 
 def back_test_gamma(file_name):
     df = DataManager.load_data_from_csv('final_data_1013.csv')
@@ -635,16 +761,34 @@ def back_test_gamma(file_name):
 
         print(Logic_gamma.run_logic(tmp_df))
 
- 
+def back_test_zeta(file_name):
+    df = DataManager.load_data_from_csv('final_data_1013.csv')
+
+    for name, code in zip(df['종목명'],df['Code']):
+        tmp_df = DataManager.load_stock_data(code)
+
+        print(Logic_zeta.run_logic(tmp_df))
+
+def back_test_dca(file_name):
+    df = DataManager.load_data_from_csv('final_data_1013.csv')
+
+    for name, code in zip(df['종목명'],df['Code']):
+        tmp_df = DataManager.load_stock_data(code)
+
+        print(Logic_dca.run_logic(tmp_df))
+
+
 
 
 if __name__ == '__main__':
     #obj = Logic()
     #obj2 = DataManagement()
-    #df = DataManager.load_stock_data('010130')
-    #Logic_gamma.run_logic(df)
+    #df = DataManager.load_stock_data('005930')
+    #Logic_zeta.run_logic(df)
 
-    back_test_gamma('back_test.csv')
+    #back_test_gamma('back_test.csv')
+    #back_test_zeta('back_test.csv')
+    back_test_dca('back_test.csv')
 
     
 
