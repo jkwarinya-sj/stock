@@ -28,6 +28,7 @@ def test_decide_invest():
         idx = idx+1
 
 
+
 def test_update_logic():
     s = Simulator('test_simulator.csv', '../datas')
     ret_list = s.update_logic(end='2024-12-31')
