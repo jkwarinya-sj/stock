@@ -176,7 +176,7 @@ class Simulator:
         new_row = pd.DataFrame([{'Name': 'Summary', 'Buying_price': total_buying_price, 'Current_price':total_current_price, 'Profit':total_profit, 'Return_rate':total_return_rate}])
         portfolio_df = pd.concat([portfolio_df, new_row], ignore_index=True)
 
-        DataManager.save_data_to_csv(out_file, portfolio_df)
+        DataManager.save_data_to_csv(out_file, portfolio_df, base_path='./out')
 
     def test(self):
         df = pd.DataFrame([ s.to_data_frame  for s in self.stock_list])
