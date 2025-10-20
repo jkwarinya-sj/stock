@@ -136,24 +136,46 @@ class Simulator:
 
 
     def make_portfolio(self, out_file='test.csv'):
+        today = datetime.date.today()
+        out_file = today.strftime("%y%m%d") + '.csv'
         df = DataManager.load_data_from_csv(self.in_file)
 
-        portfolio_df = df[df['Stock'] > 0]
+        portfolio_df = df[df['Stock'] > 0].copy()
 
-        curr_price_list = []
-        earn_rate_list = []
+        buying_price_list = []
+        current_price_list = []
+        profit_list = []
+        return_rate_list = []
         
         for s in self.stock_list:
             if s.stock > 0:
                 stock_df = DataManager.load_stock_data(s.code, '2023-01-01')
-                curr_price = stock_df['Close'].iloc[-1]
-                curr_price_list.append(curr_price)
+        
+                buying_price = s.get_cost
+                current_price = stock_df['Close'].iloc[-1] * s.stock
+                profit = current_price - buying_price
+                return_rate = current_price/buying_price - 1
 
-                earn_rate = curr_price/s.buy_price - 1
-                earn_rate_list.append(earn_rate)
+                buying_price_list.append(round(buying_price,0))
+                current_price_list.append(round(current_price,0))
+                profit_list.append(round(profit,0))
+                return_rate_list.append(round(return_rate,3))
 
-        portfolio_df['curr_price'] = curr_price_list
-        portfolio_df['earn_rate'] = earn_rate_list
+
+        portfolio_df['Buying_price'] = buying_price_list
+        portfolio_df['Current_price'] = current_price_list
+        portfolio_df['Profit'] = profit_list
+        portfolio_df['Return_rate'] = return_rate_list
+
+        total_buying_price = 1000000
+        total_current_price = sum(current_price_list)
+        total_profit = total_current_price - total_buying_price
+        total_return_rate = total_current_price/total_buying_price - 1
+
+
+        new_row = pd.DataFrame([{'Name': 'Summary', 'Buying_price': total_buying_price, 'Current_price':total_current_price, 'Profit':total_profit, 'Return_rate':total_return_rate}])
+        portfolio_df = pd.concat([portfolio_df, new_row], ignore_index=True)
+
         DataManager.save_data_to_csv(out_file, portfolio_df)
 
     def test(self):
@@ -164,9 +186,9 @@ class Simulator:
 if __name__ == '__main__':
     obj = Simulator('invest_1017.csv')
     #obj.run()
-    obj.check_current_profit()
+    #obj.check_current_profit()
     #obj.update_logic()
-    #obj.make_portfolio()
+    obj.make_portfolio()
     #obj.decide_invest()
 
 
