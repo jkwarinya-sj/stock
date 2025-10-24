@@ -153,6 +153,7 @@ class Logic_alpha(Logic):
 
         start_rate = 0.05
         target_rate = 0.15
+        #target_rate = 0.25
         investing = False
 
         for price, max_price, cpm in zip(alpha_df['Close'], alpha_df['Max'], alpha_df['Cpm']):
@@ -368,6 +369,7 @@ class Logic_delta(Logic):
         org_m = 1000000
         invest_m = 0
         target_rate = 0.15
+        #target_rate = 0.25
 
         ret_money = 0
         stock = 0
@@ -464,6 +466,7 @@ class Logic_epsilon(Logic):
         org_m = 1000000
         invest_m = 0
         target_rate = 0.15
+        #target_rate = 0.2
         sum_cpm=0
 
         ret_money = 0
@@ -591,6 +594,7 @@ class Logic_zeta(Logic):
         invest_m = 0
 
         target_rate = 0.15
+        #target_rate = 0.75
         investing = False
         cpm_list = []
 
@@ -730,6 +734,7 @@ class Logic_eta(Logic):
         invest_m = 0
 
         target_rate = 0.15
+        #target_rate = 0.55
         investing = False
 
         for price, avr, std_price, z_score in zip(eta_df['Close'], eta_df['Avr'], eta_df['Std'], eta_df['Z_Score']):
@@ -942,6 +947,7 @@ class Logic_iota(Logic):
         invest_m = 0
 
         target_rate = 0.15
+        #target_rate = 0.2
         investing = False
         
         df['RSI'] = cls._make_rsi(df)
@@ -1204,17 +1210,18 @@ if __name__ == '__main__':
     for logic back_test
     end_date='2025-09-30'
     """
+    end_date='2025-09-30'
 
-    end_date='2022-08-01'
-    start_date='2020-08-01'
+    #end_date='2022-08-01'
+    #start_date='2020-08-01'
 
     #back_test(Logic_dca, 'back_test.csv', start_date, end_date)
-    back_test(Logic_kapa, 'back_test.csv', start_date, end_date)
+    #back_test(Logic_kapa, 'back_test.csv', start_date, end_date)
 
 
 
 
-    #back_test(Logic_alpha, 'back_test.csv', end_date)
+    back_test(Logic_iota, 'back_test.csv', end_date=end_date)
     #back_test(Logic_gamma, 'back_test.csv', end_date)
     #back_test(Logic_delta, 'back_test.csv', end_date)
     #back_test(Logic_epsilon, 'back_test.csv', end_date)
