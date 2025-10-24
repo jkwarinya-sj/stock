@@ -33,7 +33,7 @@ def test_update_logic():
     s = Simulator('test_simulator.csv', '../datas')
     ret_list = s.update_logic(end='2024-12-31')
 
-    assert ret_list[0] == 'alpha'
+    assert ret_list[0] == 'eta'
     assert ret_list[1] == 'delta'
     assert ret_list[2] == 'delta'
     assert ret_list[3] == 'epsilon'

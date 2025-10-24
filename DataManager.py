@@ -97,6 +97,8 @@ class DataManager:
         code = code.split(".")[0]
         df = cls._load_data_from_fd(code, start, end)
 
+        log.debug(df)
+
         return df
 
     """

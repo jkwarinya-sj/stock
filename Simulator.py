@@ -14,9 +14,14 @@ method_dict['alpha'] = l.Logic_alpha.check_status
 method_dict['gamma'] = l.Logic_gamma.check_status
 method_dict['delta'] = l.Logic_delta.check_status
 method_dict['epsilon'] = l.Logic_epsilon.check_status
+method_dict['zeta'] = l.Logic_zeta.check_status
+method_dict['eta'] = l.Logic_eta.check_status
+method_dict['theta'] = l.Logic_theta.check_status
+method_dict['iota'] = l.Logic_iota.check_status
+method_dict['kapa'] = l.Logic_kapa.check_status
 method_dict['dca'] = ''
 
-logic_name_list = ['dca','alpha','gamma','delta','epsilon']
+logic_name_list = ['dca','alpha','gamma','delta','epsilon','zeta','eta','theta','iota','kapa']
 
 
 class Simulator:
@@ -76,7 +81,7 @@ class Simulator:
         #df = DataManager.load_data_from_csv(self.in_file)
         #log.debug(df)
 
-        logic_class = [l.Logic_dca, l.Logic_alpha, l.Logic_gamma, l.Logic_delta, l.Logic_epsilon]
+        logic_class = [l.Logic_dca, l.Logic_alpha, l.Logic_gamma, l.Logic_delta, l.Logic_epsilon, l.Logic_zeta, l.Logic_eta, l.Logic_theta, l.Logic_iota, l.Logic_kapa]
 
         logic_list = []
         price_list = []
@@ -184,12 +189,12 @@ class Simulator:
 
 
 if __name__ == '__main__':
-    obj = Simulator('invest_1017.csv')
+    obj = Simulator('invest_1024.csv')
     #obj.run()
     #obj.check_current_profit()
-    #obj.update_logic()
-    obj.make_portfolio()
-    #obj.decide_invest()
+    #obj.update_logic(out_file='invest_1024.csv')
+    #obj.make_portfolio()
+    obj.decide_invest()
 
 
 
