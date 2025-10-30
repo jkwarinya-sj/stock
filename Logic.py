@@ -35,6 +35,28 @@ class Logic:
         log.info('run_logic')
 
     @staticmethod
+    def _make_cpm_delta(df):
+        return df['Delta']/(df['Close'] - df['Delta'])
+
+    @staticmethod
+    def _make_avr_delta(df):
+        d_rate = df['Delta_rate']
+
+        gain = d_rate.clip(lower=0)
+        loss = d_rate.clip(upper=0)
+    
+        df['Gain_mean'] = gain[gain != 0].expanding().mean()
+        df['Loss_mean'] = loss[loss != 0].expanding().mean()
+
+        df =df.fillna(0)
+
+        return df
+
+
+
+
+
+    @staticmethod
     def _make_cpm(df):
         return Logic.get_rate(df['Close'], df['Max'])
 
@@ -1143,6 +1165,245 @@ class Logic_kapa(Logic):
         else:
             return '-'
 
+class Logic_lamda(Logic):
+
+    def __init__(self):
+        log.info("Start Logic")
+
+    # 로직 lamda의 수익률
+    # lamda:
+    #  - 매수 : 전체 평균 변화량(-)보다 현재 변화량이 작은경우 매수
+    #  - 매도 : 전체 평균 변화량(+)보다 현재 수익률이이 큰경우 매도
+    @classmethod
+    def run_logic(cls, df):
+        log.info('logic lamda run')
+
+        if df.empty:
+            return 0
+
+        idx = 0
+
+        org_m = 1000000
+        ret_m = 0
+        tmp_m = 0
+        stock = 0
+        invest_m = 0
+
+        target_rate = 0.15
+        investing = False
+
+        delta = df['Close'].diff()
+        df['Delta'] = delta
+        df["Delta_rate"] = df.apply(cls._make_cpm_delta, axis=1)
+        df = cls._make_avr_delta(df)
+
+        for price, rate, g_mean, l_mean in zip(df['Close'], df['Delta_rate'], df['Gain_mean'], df['Loss_mean']):
+            if idx < 51:
+                log.debug("%s", price)
+                idx = idx+1
+                continue
+
+            if rate < l_mean and not investing:
+                investing = True
+                if tmp_m == 0:
+                    invest_m = org_m
+                else:
+                    invest_m = tmp_m
+                stock = invest_m/price
+
+            ret_m = price*stock
+            ret_rate = cls.get_rate(ret_m, invest_m)
+
+            log.debug("%s, %s, %s, %s, %s, %s, %s, %s", price, rate, g_mean, l_mean, invest_m, stock, ret_m, ret_rate)
+
+            if ret_rate > g_mean and g_mean != 0 and investing:
+                investing = False
+                invest_m = 0
+                stock = 0
+                tmp_m = ret_m
+
+            idx = idx+1
+
+        if ret_m == 0:
+            ret_m = tmp_m
+
+        return cls.get_rate(ret_m, org_m)
+
+    # 로직 lamda의 매수 여부
+    @classmethod
+    def _check_buy(cls, df):
+        log.info('logic lamda check buy run')
+        buy = False
+
+        delta = df['Close'].diff()
+        df['Delta'] = delta
+        df["Delta_rate"] = df.apply(cls._make_cpm_delta, axis=1)
+        df = cls._make_avr_delta(df)
+
+        rate = df['Delta_rate'].iloc[-1]
+        l_mean = df['Loss_mean'].iloc[-1]
+
+        log.debug("%s, %s", rate, l_mean)
+
+        if rate < l_mean:
+            buy = True
+        else:
+            buy = False
+
+        if buy:
+            return 'buy'
+        else:
+            return '-'
+
+    # 로직 lamda의 매도 여부
+    @classmethod
+    def _check_sell(cls, df, org_m, stock):
+        log.info('logic lamda check sell run')
+        sell = False
+        
+        delta = df['Close'].diff()
+        df['Delta'] = delta
+        df["Delta_rate"] = df.apply(cls._make_cpm_delta, axis=1)
+        df = cls._make_avr_delta(df)
+
+        ret_m = df['Close'][-1]*stock
+        ret_rate = cls.get_rate(ret_m, org_m)
+        g_mean = df['Gain_mean'][-1]
+
+        log.debug("%s, %s", ret_rate, g_mean)
+
+        if ret_rate > g_mean and g_mean != 0:
+            sell = True
+        else:
+            sell = False
+
+        if sell:
+            return 'sell'
+        else:
+            return '-'
+
+
+class Logic_mu(Logic):
+
+    def __init__(self):
+        log.info("Start Logic")
+
+    # 로직 mu의 수익률
+    # lamda:
+    #  - 매수 : 전체 평균 변화량(-)보다 현재 변화량이 작은경우 매수
+    #  - 매도: target_rate + 이면 매도
+    @classmethod
+    def run_logic(cls, df):
+        log.info('logic mu run')
+
+        if df.empty:
+            return 0
+
+        idx = 0
+
+        org_m = 1000000
+        ret_m = 0
+        tmp_m = 0
+        stock = 0
+        invest_m = 0
+
+        target_rate = 0.15
+        investing = False
+
+        delta = df['Close'].diff()
+        df['Delta'] = delta
+        df["Delta_rate"] = df.apply(cls._make_cpm_delta, axis=1)
+        df = cls._make_avr_delta(df)
+
+        for price, rate, g_mean, l_mean in zip(df['Close'], df['Delta_rate'], df['Gain_mean'], df['Loss_mean']):
+            if idx < 51:
+                log.debug("%s", price)
+                idx = idx+1
+                continue
+
+            if rate < l_mean and not investing:
+                investing = True
+                if tmp_m == 0:
+                    invest_m = org_m
+                else:
+                    invest_m = tmp_m
+                stock = invest_m/price
+
+            ret_m = price*stock
+            ret_rate = cls.get_rate(ret_m, invest_m)
+
+            log.debug("%s, %s, %s, %s, %s, %s, %s, %s", price, rate, g_mean, l_mean, invest_m, stock, ret_m, ret_rate)
+
+            if ret_rate > target_rate and investing:
+                investing = False
+                invest_m = 0
+                stock = 0
+                tmp_m = ret_m
+
+            idx = idx+1
+
+        if ret_m == 0:
+            ret_m = tmp_m
+
+        return cls.get_rate(ret_m, org_m)
+
+    # 로직 mu의 매수 여부
+    @classmethod
+    def _check_buy(cls, df):
+        log.info('logic mu check buy run')
+        buy = False
+
+        delta = df['Close'].diff()
+        df['Delta'] = delta
+        df["Delta_rate"] = df.apply(cls._make_cpm_delta, axis=1)
+        df = cls._make_avr_delta(df)
+
+        rate = df['Delta_rate'].iloc[-1]
+        l_mean = df['Loss_mean'].iloc[-1]
+
+        log.debug("%s, %s", rate, l_mean)
+
+        if rate < l_mean:
+            buy = True
+        else:
+            buy = False
+
+        if buy:
+            return 'buy'
+        else:
+            return '-'
+
+    # 로직 mu의 매도 여부
+    @classmethod
+    def _check_sell(cls, df, org_m, stock):
+        log.info('logic mu check sell run')
+        #sell = False
+        
+        sell = cls._check_sell_by_target_rate(df, org_m, stock)
+
+        """
+        delta = df['Close'].diff()
+        df['Delta'] = delta
+        df["Delta_rate"] = df.apply(cls._make_cpm_delta, axis=1)
+        df = cls._make_avr_delta(df)
+
+        ret_m = df['Close'][-1]*stock
+        ret_rate = cls.get_rate(ret_m, org_m)
+        g_mean = df['Gain_mean'][-1]
+
+        log.debug("%s, %s", ret_rate, g_mean)
+
+        if ret_rate > g_mean and g_mean != 0:
+            sell = True
+        else:
+            sell = False
+        """
+
+        if sell:
+            return 'sell'
+        else:
+            return '-'
+
 
 
 
@@ -1179,7 +1440,7 @@ def back_test_gamma(file_name, end_date):
 def back_test(obj, file_name, start_date='2018-01-01', end_date='2024-12-31'):
     df = DataManager.load_data_from_csv(file_name)
 
-    for name, code in zip(df['종목명'],df['Code']):
+    for name, code in zip(df['Name'],df['Code']):
         tmp_df = DataManager.load_stock_data(code, start=start_date, end=end_date)
         #print(name)
         ret = obj.run_logic(tmp_df)
@@ -1199,8 +1460,9 @@ if __name__ == '__main__':
     #df = DataManager.load_stock_data('005930')
     #df = DataManager.load_stock_data('017670')
     #df = DataManager.load_stock_data('323280')
-    #Logic_eta.run_logic(df)
-    #Logic_theta.run_logic(df)
+    #df = DataManager.load_stock_data('443060', end='2024-12-31')
+    #Logic_lamda.run_logic(df)
+    #Logic_mu.run_logic(df)
     
     #df = DataManager.load_stock_data('443060', start='2020-08-01',end='2022-08-01')
     #Logic_alpha.run_logic(df)
@@ -1208,31 +1470,24 @@ if __name__ == '__main__':
 
     """
     for logic back_test
-    end_date='2025-09-30'
+    end_date='2024-12-31'
     """
     end_date='2025-09-30'
 
     #end_date='2022-08-01'
     #start_date='2020-08-01'
 
-    #back_test(Logic_dca, 'back_test.csv', start_date, end_date)
-    #back_test(Logic_kapa, 'back_test.csv', start_date, end_date)
-
-
-
-
-    back_test(Logic_iota, 'back_test.csv', end_date=end_date)
-    #back_test(Logic_gamma, 'back_test.csv', end_date)
-    #back_test(Logic_delta, 'back_test.csv', end_date)
-    #back_test(Logic_epsilon, 'back_test.csv', end_date)
-    #back_test(Logic_zeta, 'back_test.csv', end_date)
-    #back_test(Logic_eta, 'back_test.csv', end_date)
-    #back_test(Logic_theta, 'back_test.csv', end_date)
-    #back_test(Logic_iota, 'back_test.csv', end_date)
-    #back_test(Logic_kapa, 'back_test.csv', end_date)
-
-    
-
-
+    #back_test(Logic_dca, 'back_test_new.csv', end_date=end_date)
+    #back_test(Logic_alpha, 'back_test_new.csv', end_date=end_date)
+    #back_test(Logic_gamma, 'back_test_new.csv', end_date=end_date)
+    #back_test(Logic_delta, 'back_test_new.csv', end_date=end_date)
+    #back_test(Logic_epsilon, 'back_test_new.csv', end_date=end_date)
+    #back_test(Logic_zeta, 'back_test_new.csv', end_date=end_date)
+    #back_test(Logic_eta, 'back_test_new.csv', end_date=end_date)
+    #back_test(Logic_theta, 'back_test_new.csv', end_date=end_date)
+    #back_test(Logic_iota, 'back_test_new.csv', end_date=end_date)
+    #back_test(Logic_kapa, 'back_test_new.csv', end_date=end_date)
+    #back_test(Logic_lamda, 'back_test_new.csv', end_date=end_date)
+    back_test(Logic_mu, 'back_test_new.csv', end_date=end_date)
 
 

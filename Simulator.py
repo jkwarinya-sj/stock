@@ -7,6 +7,7 @@ import pandas as pd
 import datetime
 #from tqdm import tqdm
 from tqdm import tqdm, tqdm_pandas
+import math
 
 log = LogManager.get_logger(logging.DEBUG)
 method_dict={}
@@ -19,9 +20,13 @@ method_dict['eta'] = l.Logic_eta.check_status
 method_dict['theta'] = l.Logic_theta.check_status
 method_dict['iota'] = l.Logic_iota.check_status
 method_dict['kapa'] = l.Logic_kapa.check_status
+method_dict['lamda'] = l.Logic_lamda.check_status
+method_dict['mu'] = l.Logic_mu.check_status
 method_dict['dca'] = ''
 
-logic_name_list = ['dca','alpha','gamma','delta','epsilon','zeta','eta','theta','iota','kapa']
+logic_name_list = ['dca','alpha','gamma','delta','epsilon','zeta','eta','theta','iota','kapa','lamda','mu']
+logic_class = [l.Logic_dca, l.Logic_alpha, l.Logic_gamma, l.Logic_delta, l.Logic_epsilon, l.Logic_zeta, l.Logic_eta, l.Logic_theta, l.Logic_iota, l.Logic_kapa, l.Logic_lamda, l.Logic_mu]
+
 
 
 class Simulator:
@@ -81,8 +86,6 @@ class Simulator:
         #df = DataManager.load_data_from_csv(self.in_file)
         #log.debug(df)
 
-        logic_class = [l.Logic_dca, l.Logic_alpha, l.Logic_gamma, l.Logic_delta, l.Logic_epsilon, l.Logic_zeta, l.Logic_eta, l.Logic_theta, l.Logic_iota, l.Logic_kapa]
-
         logic_list = []
         price_list = []
         stock_list = []
@@ -107,32 +110,6 @@ class Simulator:
                 logic_list.append(s.logic)
                 #stock_list.append(s.stock)
                 #price_list.append(s.buy_price)
-
-            
-        
-        """
-
-        for name, code, stock, price, logic in tqdm(zip(df['종목명'],df['Code'],df['stock'],df['price'],df['logic'])):
-            stock_df = DataManager.load_stock_data(code, start='2023-01-01', end=end)
-            ret_list = []
-
-            if stock == 0:
-                ret_list.append([obj.run_logic(stock_df) for obj in logic_class])
-                ret_list = sum(ret_list,[])
-                logic_list.append(logic_name_list[ret_list.index(max(ret_list))])
-                stock_list.append(0)
-                price_list.append(0)
-
-            else:
-                logic_list.append(logic)
-                stock_list.append(stock)
-                price_list.append(price)
-
-        df['logic'] = logic_list
-        df['price'] = price_list
-        df['stock'] = stock_list
-
-        """
 
         df = pd.DataFrame([ s.to_data_frame  for s in self.stock_list])
         DataManager.save_data_to_csv(out_file, df, self.base_path)
@@ -188,13 +165,73 @@ class Simulator:
         print(df)
 
 
+    @staticmethod
+    def _make_rate(df, target):
+        if df['dca'] == 0:
+            ret = 0
+        else:
+            ret = math.sqrt(pow(df[target],2) / pow(df['dca'],2))
+
+        if df[target] < 0 and df['dca'] > 0:
+            ret = -ret
+        elif df[target] < 0 and df['dca'] < 0:
+            ret = -ret
+
+
+        return ret
+
+
+    def back_test(self, file_name, out_file_name, start_date, end_date):
+        df = DataManager.load_data_from_csv(file_name)
+
+        out_df = pd.DataFrame()
+
+        for name, code in zip(df['Name'],df['Code']):
+            tmp_df = DataManager.load_stock_data(code, start=start_date, end=end_date)
+            idx = 0
+            new_row = {}
+            for logic_name in logic_name_list:
+                obj = logic_class[idx]
+                ret = obj.run_logic(tmp_df)
+                if ret == -1:
+                    ret = 0
+
+                new_row[logic_name] = ret
+
+                idx = idx+1
+
+
+            out_df = pd.concat([out_df, pd.DataFrame([new_row])], ignore_index=True)
+
+
+        for logic_name in logic_name_list:
+            out_df[logic_name + '_rate'] = out_df.apply(self._make_rate, axis=1, args=(logic_name,))
+
+        mean_row = out_df.mean(numeric_only=True)
+        out_df.loc["mean"] = mean_row
+
+        median_row = out_df.median(numeric_only=True)
+        out_df.loc["median"] = median_row
+
+
+
+        DataManager.save_data_to_csv(out_file_name, out_df, './out' )
+
+        #print(out_df)
+
+
+
 if __name__ == '__main__':
-    obj = Simulator('invest_1024.csv')
+    obj = Simulator('invest_1027.csv')
     #obj.run()
     #obj.check_current_profit()
-    #obj.update_logic(out_file='invest_1024.csv')
+    #obj.update_logic(out_file='invest_1031.csv')
     #obj.make_portfolio()
-    obj.decide_invest()
+    #obj.decide_invest()
+    start_date = '2022-01-01'
+    end_date = '2024-12-31'
+
+    obj.back_test('back_test_new.csv','2024.csv', start_date, end_date)
 
 
 
